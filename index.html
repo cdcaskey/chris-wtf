@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Seriously, Chris. WTF?</title>
+    <style>
+      #container {
+        position: fixed;
+        inset: 0px;
+        height: 6rem;
+        max-width: 100vw;
+        max-height: 100dvh;
+        margin: auto;
+        text-align: center;
+        vertical-align: middle;
+      }
+
+      #commit {
+        font-size: x-large;
+      }
+
+      #repo,
+      #dash,
+      #date {
+        font-size: medium;
+      }
+
+      #wtf {
+        font-size: xx-large;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <span id="commit">Initial commit</span>
+      <br />
+      <span id="repo">chris-wtf</span>
+      <span id="dash">-</span>
+      <span id="date">26/11/2024</span>
+      <br />
+      <span id="wtf">Seriously Chris, WTF?</span>
+    </div>
+    <script type="text/javascript">
+      function httpGet(theUrl) {
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.open("GET", theUrl, false); // false for synchronous request
+        xmlHttp.send(null);
+        return JSON.parse(xmlHttp.responseText);
+      }
+
+      (function () {
+        let repos = httpGet("https://api.github.com/users/cdcaskey/repos");
+        let repo = repos[Math.floor(Math.random() * repos.length)];
+
+        let commits = httpGet(repo.url + "/commits");
+        let commit = {};
+        do {
+          commit = commits[Math.floor(Math.random() * commits.length)];
+        } while (commit.author.login !== "cdcaskey");
+
+        document.getElementById("commit").textContent =
+          commit.commit.message.split("\n")[0];
+        document.getElementById("repo").textContent = repo.name;
+        let date = new Date(commit.commit.author.date);
+        document.getElementById("date").textContent =
+          date.toLocaleString("en-GB");
+
+        console.log(commit);
+      })();
+    </script>
+  </body>
+</html>
