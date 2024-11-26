@@ -40,40 +40,58 @@
       <span id="wtf">Seriously Chris, WTF?</span>
     </div>
     <script type="text/javascript">
-      function httpGet(theUrl) {
-        var xmlHttp = new XMLHttpRequest();
-        xmlHttp.open("GET", theUrl, false); // false for synchronous request
-        xmlHttp.send(null);
-        return JSON.parse(xmlHttp.responseText);
+      function setText(repo, commit) {
+        document.getElementById("commit").textContent =
+          commit.commit.message.split("\n")[0];
+        document.getElementById("repo").textContent = repo.name;
+        let date = new Date(commit.commit.author.date);
+        document.getElementById("date").textContent =
+          date.toLocaleString("en-GB");
       }
 
-      (function () {
-        try {
-          let repos = httpGet("https://api.github.com/users/cdcaskey/repos");
-          let repo = repos[Math.floor(Math.random() * repos.length)];
+      function setFallback() {
+        document.getElementById("commit").textContent =
+          'You\'ve asked "Seriously, Chris. WTF?" enough times to get rate limited.';
+        document.getElementById("repo").textContent = "";
+        document.getElementById("dash").textContent =
+          "Maybe it's time to ask yourself:";
+        document.getElementById("date").textContent = "";
+        document.getElementById("wtf").textContent =
+          "Seriously, <insert name here>. WTF?";
+      }
 
-          let commits = httpGet(repo.url + "/commits");
-          let commit = {};
-          do {
-            commit = commits[Math.floor(Math.random() * commits.length)];
-          } while (commit.author.login !== "cdcaskey");
+      (async function () {
+        let repos = await fetch("https://api.github.com/users/cdcaskey/repos")
+          .then((response) => {
+            if (response.status === 200) {
+              response.json();
+            } else {
+              throw new Error();
+            }
+          })
+          .catch((_) => setFallback());
 
-          document.getElementById("commit").textContent =
-            commit.commit.message.split("\n")[0];
-          document.getElementById("repo").textContent = repo.name;
-          let date = new Date(commit.commit.author.date);
-          document.getElementById("date").textContent =
-            date.toLocaleString("en-GB");
-        } catch (e) {
-          document.getElementById("commit").textContent =
-            'You\'ve asked "Seriously, Chris. WTF?" enough times to get rate limited.';
-          document.getElementById("repo").textContent = "";
-          document.getElementById("dash").textContent =
-            "Maybe it's time to ask yourself:";
-          document.getElementById("date").textContent = "";
-          document.getElementById("wtf").textContent =
-            "Seriously, <insert name here>. WTF?";
-        }
+        if (!repos) return;
+
+        let repo = repos[Math.floor(Math.random() * repos.length)];
+        let commits = await fetch(repo.url + "/commits")
+          .then((response) => {
+            if (response.status === 200) {
+              response.json();
+            } else {
+              throw new Error();
+            }
+          })
+          .catch((_) => setFallback());
+
+        if (!commits) return;
+
+        let commit = {};
+        do {
+          commit = commits[Math.floor(Math.random() * commits.length)];
+        } while (commit.author.login !== "cdcaskey");
+
+        setText(repo, commit);
       })();
     </script>
   </body>
