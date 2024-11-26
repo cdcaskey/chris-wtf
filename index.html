@@ -48,23 +48,32 @@
       }
 
       (function () {
-        let repos = httpGet("https://api.github.com/users/cdcaskey/repos");
-        let repo = repos[Math.floor(Math.random() * repos.length)];
+        try {
+          let repos = httpGet("https://api.github.com/users/cdcaskey/repos");
+          let repo = repos[Math.floor(Math.random() * repos.length)];
 
-        let commits = httpGet(repo.url + "/commits");
-        let commit = {};
-        do {
-          commit = commits[Math.floor(Math.random() * commits.length)];
-        } while (commit.author.login !== "cdcaskey");
+          let commits = httpGet(repo.url + "/commits");
+          let commit = {};
+          do {
+            commit = commits[Math.floor(Math.random() * commits.length)];
+          } while (commit.author.login !== "cdcaskey");
 
-        document.getElementById("commit").textContent =
-          commit.commit.message.split("\n")[0];
-        document.getElementById("repo").textContent = repo.name;
-        let date = new Date(commit.commit.author.date);
-        document.getElementById("date").textContent =
-          date.toLocaleString("en-GB");
-
-        console.log(commit);
+          document.getElementById("commit").textContent =
+            commit.commit.message.split("\n")[0];
+          document.getElementById("repo").textContent = repo.name;
+          let date = new Date(commit.commit.author.date);
+          document.getElementById("date").textContent =
+            date.toLocaleString("en-GB");
+        } catch (e) {
+          document.getElementById("commit").textContent =
+            'You\'ve asked "Seriously, Chris. WTF?" enough times to get rate limited.';
+          document.getElementById("repo").textContent = "";
+          document.getElementById("dash").textContent =
+            "Maybe it's time to ask yourself:";
+          document.getElementById("date").textContent = "";
+          document.getElementById("wtf").textContent =
+            "Seriously, <insert name here>. WTF?";
+        }
       })();
     </script>
   </body>
