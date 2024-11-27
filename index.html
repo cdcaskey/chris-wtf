@@ -95,38 +95,62 @@
         name.focus();
       }
 
+      async function fetchWithTimeout(resource, options = {}) {
+        const { timeout = 2000 } = options;
+
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeout);
+
+        const response = await fetch(resource, {
+          ...options,
+          signal: controller.signal,
+        });
+        clearTimeout(id);
+
+        return response;
+      }
+
       (async function () {
-        let repos = await fetch("https://api.github.com/users/cdcaskey/repos")
-          .then((response) => {
-            if (response.status === 200) {
-              return response.json();
-            } else {
-              throw new Error();
-            }
+        try {
+          let repos = await fetchWithTimeout(
+            "https://api.github.com/users/cdcaskey/repos",
+            { timeout: 2000 }
+          )
+            .then((response) => {
+              if (response.status === 200) {
+                return response.json();
+              } else {
+                throw new Error();
+              }
+            })
+            .catch((_) => setFallback());
+
+          if (!repos) return;
+
+          let repo = repos[Math.floor(Math.random() * repos.length)];
+          let commits = await fetchWithTimeout(repo.url + "/commits", {
+            timeout: 2000,
           })
-          .catch((_) => setFallback());
+            .then((response) => {
+              if (response.status === 200) {
+                return response.json();
+              } else {
+                throw new Error();
+              }
+            })
+            .catch((_) => setFallback());
 
-        if (!repos) return;
+          if (!commits) return;
 
-        let repo = repos[Math.floor(Math.random() * repos.length)];
-        let commits = await fetch(repo.url + "/commits")
-          .then((response) => {
-            if (response.status === 200) {
-              return response.json();
-            } else {
-              throw new Error();
-            }
-          })
-          .catch((_) => setFallback());
+          let commit = {};
+          do {
+            commit = commits[Math.floor(Math.random() * commits.length)];
+          } while (commit.author.login !== "cdcaskey");
 
-        if (!commits) return;
-
-        let commit = {};
-        do {
-          commit = commits[Math.floor(Math.random() * commits.length)];
-        } while (commit.author.login !== "cdcaskey");
-
-        setText(repo, commit);
+          setText(repo, commit);
+        } catch (e) {
+          setFallback();
+        }
       })();
     </script>
   </body>
