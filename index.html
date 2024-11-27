@@ -3,6 +3,11 @@
   <head>
     <title>Seriously, Chris. WTF?</title>
     <style>
+      html,
+      input {
+        font-family: Cambria, Cochin, Georgia, Times, "Times New Roman", serif;
+      }
+
       #container {
         position: fixed;
         inset: 0px;
@@ -24,8 +29,15 @@
         font-size: medium;
       }
 
-      #wtf {
+      .wtf {
         font-size: xx-large;
+      }
+
+      #name {
+        border: 0;
+        outline: none;
+        background: none;
+        width: auto;
       }
     </style>
   </head>
@@ -37,7 +49,9 @@
       <span id="dash">-</span>
       <span id="date">26/11/2024</span>
       <br />
-      <span id="wtf">Seriously Chris, WTF?</span>
+      <span class="wtf">Seriously </span>
+      <span id="name" class="wtf">Chris</span>
+      <span class="wtf">, WTF?</span>
     </div>
     <script type="text/javascript">
       function setText(repo, commit) {
@@ -56,15 +70,36 @@
         document.getElementById("dash").textContent =
           "Maybe it's time to ask yourself:";
         document.getElementById("date").textContent = "";
-        document.getElementById("wtf").textContent =
-          "Seriously, <insert name here>. WTF?";
+
+        let name = document.getElementById("name");
+        name.contentEditable = true;
+        name.textContent = "<insert name here>";
+
+        name.onfocus = function () {
+          window.setTimeout(function () {
+            var sel, range;
+            if (window.getSelection && document.createRange) {
+              range = document.createRange();
+              range.selectNodeContents(name);
+              sel = window.getSelection();
+              sel.removeAllRanges();
+              sel.addRange(range);
+            } else if (document.body.createTextRange) {
+              range = document.body.createTextRange();
+              range.moveToElementText(name);
+              range.select();
+            }
+          }, 1);
+        };
+
+        name.focus();
       }
 
       (async function () {
         let repos = await fetch("https://api.github.com/users/cdcaskey/repos")
           .then((response) => {
             if (response.status === 200) {
-              response.json();
+              return response.json();
             } else {
               throw new Error();
             }
@@ -77,7 +112,7 @@
         let commits = await fetch(repo.url + "/commits")
           .then((response) => {
             if (response.status === 200) {
-              response.json();
+              return response.json();
             } else {
               throw new Error();
             }
